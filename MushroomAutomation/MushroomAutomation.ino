@@ -51,3 +51,18 @@ void loop() {
 
   delay(1000); // Đợi 1 giây trước khi lấy thời gian mới
 }
+BLYNK_WRITE(V1)
+{
+  int pinValue = param.asInt(); // Đọc trạng thái nút nhấn ảo từ pin ảo V1
+
+  if (pinValue == 0) {
+    ledState = HIGH; // Bật đèn
+    Blynk.virtualWrite(V0, 0);
+  } else {
+    ledState = LOW; // Tắt đèn
+    Blynk.virtualWrite(V0, 1);
+  }
+  digitalWrite(ledPin, ledState); // Cập nhật trạng thái đèn
+  Serial.println(ledState);
+  
+}
