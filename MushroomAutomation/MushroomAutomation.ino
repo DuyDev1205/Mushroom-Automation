@@ -1,10 +1,20 @@
+#include <Blynk.h>
+
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include "secret_pass.h"
+
+//reagion blynk
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID      "TMPL6r0fdPEst"
+#define BLYNK_TEMPLATE_NAME    "Mushroom"
+#define BLYNK_AUTH_TOKEN       "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+//endreagion blynk
 const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
 const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
-
 // Địa chỉ IP của máy chủ NTP
 const char *ntpServer = "pool.ntp.org";
 
@@ -18,6 +28,7 @@ void setup() {
   Serial.begin(115200);
 
   // Kết nối WiFi
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -30,6 +41,7 @@ void setup() {
 }
 
 void loop() {
+   Blynk.run();
   // Cập nhật thời gian
   timeClient.update();
 
