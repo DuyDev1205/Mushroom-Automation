@@ -28,16 +28,16 @@ void setup()
   Serial.begin(9600);
 
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  timeClient.begin();
+  // timeClient.begin();
   WiFi.begin(ssid, pass);
 }
 
 void loop()
 {
   Blynk.run();
-  timeClient.update();
-  String formattedTime = timeClient.getFormattedTime();
-  Serial.println("Formatted Time: " + formattedTime);
+  // timeClient.update();
+  // String formattedTime = timeClient.getFormattedTime();
+  // Serial.println("Formatted Time: " + formattedTime);
   Serial.println("hello");
   float temp = sht31.readTemperature();
    float humidity = sht31.readHumidity();
