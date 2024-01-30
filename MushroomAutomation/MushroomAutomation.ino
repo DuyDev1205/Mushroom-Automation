@@ -1,7 +1,6 @@
 //reagion #include
- #include <Blynk.h>
  #include <WiFi.h>
- //#include <NTPClient.h>
+ #include <NTPClient.h>
  #include <WiFiUdp.h>
  #include "secret_pass.h"
  
@@ -12,9 +11,7 @@
  //endreagion sht30 sensor
 
   #include <WiFiClient.h>
-  #include <BlynkSimpleEsp32.h>
- const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
- const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
+
  const char *ntpServer = "pool.ntp.org";
  const int ntpPort = 123;
 
@@ -29,13 +26,12 @@
  //reagion sht30 sensor
   if (!sht31.begin(0x44)) {  // Địa chỉ I2C của mạch SHT30 là 0x44
     Serial.println("Không thể tìm thấy mạch SHT30. Kiểm tra kết nối!");
-    while (1);}
+    while (100);}
   Serial.println("Mạch SHT30 đã được kết nối!");
  //endreagion sht30 sensor
 
-
  //reagion wifi
-  WiFi.begin(ssid, password);
+  WiFi.begin(SECRET_SSID, SECRET_PASS);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");}
@@ -48,10 +44,6 @@
 
 //reagion loop
  void loop() {
-  
-
-
-
  //reagion time
   timeClient.update();
   String formattedTime = timeClient.getFormattedTime();
