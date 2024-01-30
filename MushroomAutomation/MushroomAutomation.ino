@@ -1,22 +1,23 @@
-#include <Blynk.h>
-
+// #include <Blynk.h>
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include "secret_pass.h"
+#include <SHT3x.h>
+SHT3x Sensor;
+const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
+const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
+// Địa chỉ IP của máy chủ NTP
+const char *ntpServer = "pool.ntp.org";
 
-//reagion blynk
+// reagion blynk
 #define BLYNK_PRINT Serial
 #define BLYNK_TEMPLATE_ID      "TMPL6r0fdPEst"
 #define BLYNK_TEMPLATE_NAME    "Mushroom"
 #define BLYNK_AUTH_TOKEN       "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
-//endreagion blynk
-const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
-const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
-// Địa chỉ IP của máy chủ NTP
-const char *ntpServer = "pool.ntp.org";
+// endreagion blynk
 
 // Cổng NTP
 const int ntpPort = 123;
@@ -26,7 +27,7 @@ NTPClient timeClient(ntpUDP, ntpServer, ntpPort);
 
 void setup() {
   Serial.begin(115200);
-
+  Sensor.Begin();
   // Kết nối WiFi
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
   WiFi.begin(ssid, password);
@@ -35,7 +36,7 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
-
+  timeClient.setTimeOffset(7 * 3600);
   // Bắt đầu đồng bộ thời gian từ máy chủ NTP
   timeClient.begin();
 }
@@ -47,8 +48,15 @@ void loop() {
 
   // Lấy thông tin ngày, tháng, năm, giờ, phút, giây
   String formattedTime = timeClient.getFormattedTime();
-  Serial.println("Formatted Time: " + formattedTime);
-
+  Serial.print(formattedTime+' ');
+  Sensor.UpdateData();
+  Serial.print("Temperature: ");
+  Serial.print(Sensor.GetTemperature());
+  Serial.write("\xC2\xB0");
+  Serial.print("C\t");
+  Serial.print("Humidity: ");
+  Serial.print(Sensor.GetRelHumidity());
+  Serial.println("%");
   delay(1000); // Đợi 1 giây trước khi lấy thời gian mới
 }
 BLYNK_WRITE(V1)
