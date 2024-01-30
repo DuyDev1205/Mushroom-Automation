@@ -1,68 +1,81 @@
-#include <Blynk.h>
+//reagion #include
+ #include <Blynk.h>
+ #include <WiFi.h>
+ //#include <NTPClient.h>
+ #include <WiFiUdp.h>
+ #include "secret_pass.h"
+ 
+ //reagion sht30 sensor
+  #include <Wire.h>
+  #include <Adafruit_SHT31.h>
+  Adafruit_SHT31 sht31 = Adafruit_SHT31();
+ //endreagion sht30 sensor
 
-#include <WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-#include "secret_pass.h"
+  #include <WiFiClient.h>
+  #include <BlynkSimpleEsp32.h>
+ const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
+ const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
+ const char *ntpServer = "pool.ntp.org";
+ const int ntpPort = 123;
 
-//reagion blynk
-#define BLYNK_PRINT Serial
-#define BLYNK_TEMPLATE_ID      "TMPL6r0fdPEst"
-#define BLYNK_TEMPLATE_NAME    "Mushroom"
-#define BLYNK_AUTH_TOKEN       "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
-//endreagion blynk
-const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
-const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
-// Địa chỉ IP của máy chủ NTP
-const char *ntpServer = "pool.ntp.org";
+ WiFiUDP ntpUDP;
+ NTPClient timeClient(ntpUDP, ntpServer, ntpPort);
+//endreagion #include
 
-// Cổng NTP
-const int ntpPort = 123;
-
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, ntpServer, ntpPort);
-
-void setup() {
+//reagion setup
+ void setup() {
   Serial.begin(115200);
 
-  // Kết nối WiFi
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
+ //reagion sht30 sensor
+  if (!sht31.begin(0x44)) {  // Địa chỉ I2C của mạch SHT30 là 0x44
+    Serial.println("Không thể tìm thấy mạch SHT30. Kiểm tra kết nối!");
+    while (1);}
+  Serial.println("Mạch SHT30 đã được kết nối!");
+ //endreagion sht30 sensor
+
+
+ //reagion wifi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
+    Serial.println("Connecting to WiFi...");}
   Serial.println("Connected to WiFi");
+ //endreagion wifi
 
-  // Bắt đầu đồng bộ thời gian từ máy chủ NTP
   timeClient.begin();
-}
+ }
+//endreagion setup
 
-void loop() {
-   Blynk.run();
-  // Cập nhật thời gian
+//reagion loop
+ void loop() {
+  
+
+
+
+ //reagion time
   timeClient.update();
-
-  // Lấy thông tin ngày, tháng, năm, giờ, phút, giây
   String formattedTime = timeClient.getFormattedTime();
   Serial.println("Formatted Time: " + formattedTime);
+  delay(1000); 
+ //endreagion time
 
-  delay(1000); // Đợi 1 giây trước khi lấy thời gian mới
-}
-BLYNK_WRITE(V1)
-{
-  int pinValue = param.asInt(); // Đọc trạng thái nút nhấn ảo từ pin ảo V1
+ //reagion code
+  //reagion code SHT30
+   float temp = sht31.readTemperature();
+   float humidity = sht31.readHumidity();
+    if (!isnan(temp) && !isnan(humidity)) {
+    Serial.print("Nhiệt độ: ");
+    Serial.print(temp);
+    Serial.print(" °C\tĐộ ẩm: ");
+    Serial.print(humidity);
+    Serial.println(" %");
+    } else {
+    Serial.println("Không thể đọc dữ liệu từ mạch SHT30!");
+    }
+    delay(1000); 
+   
+  //endreagion code SHT30
+ //endreagion code
 
-  if (pinValue == 0) {
-    ledState = HIGH; // Bật đèn
-    Blynk.virtualWrite(V0, 0);
-  } else {
-    ledState = LOW; // Tắt đèn
-    Blynk.virtualWrite(V0, 1);
-  }
-  digitalWrite(ledPin, ledState); // Cập nhật trạng thái đèn
-  Serial.println(ledState);
-  
-}
+ }
+//endreagion loop
