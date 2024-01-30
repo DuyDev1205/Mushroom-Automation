@@ -1,6 +1,2 @@
-#define SECRET_SSID  "Bu Bill"
-#define SECRET_PASS  "@laphoa2017"
-
-#define BLYNK_TEMPLATE_ID "TMPL6r0fdPEst"
-#define BLYNK_TEMPLATE_NAME "Mushroom"
-#define BLYNK_AUTH_TOKEN "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
+char ssid[] = "Thu Tamm";
+char pass[] = "thutam1975";
