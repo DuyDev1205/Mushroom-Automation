@@ -1,7 +1,20 @@
-#include <BlynkSimpleEsp32.h>
 #include <SHT3x.h>
 
 SHT3x Sensor;
+
+
+
+
+/* Fill in information from Blynk Device Info here */
+#define BLYNK_TEMPLATE_ID      "TMPL6r0fdPEst"
+#define BLYNK_TEMPLATE_NAME    "Mushroom"
+#define BLYNK_AUTH_TOKEN       "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
+
+#define BLYNK_PRINT Serial
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
 
 char ssid[] = "Bu Bill";
 char pass[] = "@laphoa2017";
@@ -33,14 +46,13 @@ void sendTemperatureAndHumidityData() {
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.println("%");
-
   Blynk.virtualWrite(V1, temperature);
   Blynk.virtualWrite(V2, humidity);
 }
 
-void autoControlMode() {
-  float temperature = Blynk.virtualRead(V5).asFloat(); // Đọc nhiệt độ mong muốn từ Blynk
-  float humidity = Blynk.virtualRead(V6).asFloat(); // Đọc độ ẩm mong muốn từ Blynk
+void autoControlMode(float temperature,float humidity) {
+  Serial.println(temperature);
+  Serial.println(humidity);
   float currentTemperature = Sensor.GetTemperature();
   float currentHumidity = Sensor.GetRelHumidity();
 
@@ -77,16 +89,18 @@ void autoControlMode() {
       Blynk.setProperty(V3, "color", "#2EA5D8");
       lastSprayTime = currentMillis; // Cập nhật thời gian cuối cùng phun sương
     }
-  } else if (currentHumidity > humidity + 5) {
-    digitalWrite(pumpPin, LOW); // Tắt máy bơm
-    Blynk.setProperty(V3, "color", "#FF0000" );
-  }
-  
+  } else if (currentHumidity > humidity + 5) 
+    {
+      digitalWrite(pumpPin, LOW); // Tắt máy bơm
+      Blynk.setProperty(V3, "color", "#FF0000" );
+
+    }
 }
 
 void loop()
 {
   Blynk.run();
+  
   // Cập nhật màu sắc của các nút trên ứng dụng Blynk
   Blynk.setProperty(V1, "color", autoControl ? "#2EA5D8" : "#FF0000"); // Màu xanh nước biển hoặc đỏ cho V1 (nhiệt độ)
   Blynk.setProperty(V2, "color", autoControl ? "#2EA5D8" : "#FF0000"); // Màu xanh nước biển hoặc đỏ cho V2 (độ ẩm)
@@ -95,15 +109,17 @@ void loop()
   Blynk.setProperty(V6, "color", autoControl ? "#2EA5D8" : "#FF0000"); // Màu xanh nước biển hoặc đỏ cho V6 (độ ẩm mong muốn)
   
   if(autoControl) {
-    autoControlMode();
+    autoControlMode(desiredTemperature,desiredHumidity);
     
   }
+  sendTemperatureAndHumidityData();
 }
 
 BLYNK_WRITE(V4) // Chức năng bật/tắt tự động từ Blynk
 {
   autoControl = param.asInt();
 }
+
 
 BLYNK_WRITE(V3) // Chức năng bật/tắt máy bơm từ Blynk (chế độ không tự động)
 {
@@ -114,4 +130,13 @@ BLYNK_WRITE(V3) // Chức năng bật/tắt máy bơm từ Blynk (chế độ kh
     // Thay đổi màu của nút tương ứng với trạng thái máy bơm
     Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000"); // Màu xanh khi máy bơm được bật, đỏ khi tắt
   }
+}
+BLYNK_WRITE(V5) 
+{
+  desiredTemperature = param.asFloat();
+}
+
+BLYNK_WRITE(V6) 
+{
+  desiredHumidity = param.asFloat();
 }
