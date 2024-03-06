@@ -1,8 +1,8 @@
 #include <SHT3x.h>
 
 SHT3x Sensor;
+#include "secret_pass.h"
 
-#include secret_pass.h
 
 #define BLYNK_PRINT Serial
 
