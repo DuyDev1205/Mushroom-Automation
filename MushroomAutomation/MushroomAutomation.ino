@@ -2,9 +2,7 @@
 
 SHT3x Sensor;
 
-#define BLYNK_TEMPLATE_ID      "TMPL6r0fdPEst"
-#define BLYNK_TEMPLATE_NAME    "Mushroom"
-#define BLYNK_AUTH_TOKEN       "zBHRmPs-55II61f8lNHAkv9H3Q4ACr0C"
+#include secret_pass.h
 
 #define BLYNK_PRINT Serial
 
@@ -12,8 +10,6 @@ SHT3x Sensor;
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
 
-char ssid[] = "Bu Bill";
-char pass[] = "@laphoa2017";
 
 const int pumpPin = 12;
 
