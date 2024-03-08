@@ -64,11 +64,13 @@ void loop() {
 
   float temperature, humidity;
   getTemperatureAndHumidity(temperature, humidity);
+  Serial.println(temperature);
+  Serial.println(humidity);
   Blynk.virtualWrite(V1, temperature);
   Blynk.virtualWrite(V2, humidity);
   Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
 
-  if (autoControl) {
+  if (autoControl && temperature != 0 && humidity != 0) {
     autoControlMode(desiredTemperature, desiredHumidity);
   }
 }
