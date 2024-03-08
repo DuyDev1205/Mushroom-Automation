@@ -1,24 +1,21 @@
 #include <SHT3x.h>
-
 SHT3x Sensor;
+
 #include "secret_pass.h"
 
-
 #define BLYNK_PRINT Serial
-
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
 
-
 const int pumpPin = 12;
-
 bool autoControl = true;
 float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
-
 unsigned long lastSprayTime = 0;
 unsigned long lastCheckTime = 0;
+float currentTemperature, currentHumidity;
+int pumpState = LOW;
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
@@ -31,12 +28,9 @@ void getTemperatureAndHumidity(float& temperature, float& humidity) {
   Sensor.UpdateData();
   temperature = Sensor.GetTemperature();
   humidity = Sensor.GetRelHumidity();
-  Blynk.virtualWrite(V1, temperature);
-  Blynk.virtualWrite(V2, humidity);
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  float currentTemperature, currentHumidity;
   getTemperatureAndHumidity(currentTemperature, currentHumidity);
 
   unsigned long currentMillis = millis();
@@ -62,15 +56,17 @@ void autoControlMode(float& temperature, float& humidity) {
 void loop() {
   Blynk.run();
   Blynk.setProperty(V3, "label", "Máy bơm");
-  Blynk.setProperty(V1, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V2, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V4, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V5, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V6, "color", autoControl ? "#2EA5D8" : "#FF0000");
+  Blynk.setProperty(V1, "color", "#2EA5D8");
+  Blynk.setProperty(V2, "color", "#2EA5D8");
+  Blynk.setProperty(V4, "color", "#2EA5D8");
+  Blynk.setProperty(V5, "color", "#2EA5D8");
+  Blynk.setProperty(V6, "color", "#2EA5D8");
 
-  if (!autoControl) {
-    BLYNK_WRITE(V3);
-  }
+  float temperature, humidity;
+  getTemperatureAndHumidity(temperature, humidity);
+  Blynk.virtualWrite(V1, temperature);
+  Blynk.virtualWrite(V2, humidity);
+  Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
 
   if (autoControl) {
     autoControlMode(desiredTemperature, desiredHumidity);
@@ -82,15 +78,8 @@ BLYNK_WRITE(V4) {
 }
 
 BLYNK_WRITE(V3) {
-  if (!autoControl) {
-    int pumpState = param.asInt();
+    pumpState = param.asInt();
     digitalWrite(pumpPin, pumpState);
-    float temperature = Sensor.GetTemperature();
-    float humidity = Sensor.GetRelHumidity();
-    Blynk.virtualWrite(V1, temperature);
-    Blynk.virtualWrite(V2, humidity);
-    Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
-  }
 }
 
 BLYNK_WRITE(V5) {
