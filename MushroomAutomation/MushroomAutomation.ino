@@ -6,10 +6,11 @@ SHT3x Sensor;
 
 #define BLYNK_PRINT Serial
 
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
 
-const int pumpPin = D1; // Chân kết nối của máy bơm với ESP8266
+const int pumpPin = 12; // Chân kết nối của máy bơm với ESP8266
 
 bool autoControl = true;
 float desiredTemperature = 25.0;
