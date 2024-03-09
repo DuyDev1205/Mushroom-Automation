@@ -31,8 +31,7 @@ void setup() {
 
 void autoControlMode(float& temperature, float& humidity) {
   Sensor.UpdateData();
-  temperature = Sensor.GetTemperature();
-  humidity = Sensor.GetRelHumidity();
+  float currentHumidity = Sensor.GetRelHumidity();
 
   unsigned long currentMillis = millis();
   
@@ -64,14 +63,7 @@ void loop() {
   Blynk.setProperty(V6, "color", "#2EA5D8");
   Serial.println("desiredhumidity");
   Serial.println(desiredHumidity);
-  float temperature, humidity;
-  getTemperatureAndHumidity(temperature, humidity);
-  Serial.println(temperature);
-  Serial.println(humidity);
-  Blynk.virtualWrite(V1, temperature);
-  Blynk.virtualWrite(V2, humidity);
-  Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
-
+  
   if (!autoControl) {
     BLYNK_WRITE(V3);
   }
@@ -81,9 +73,8 @@ void loop() {
   }
 
   Sensor.UpdateData();
-  temperature = Sensor.GetTemperature();
-  humidity = Sensor.GetRelHumidity();
-
+  float temperature = Sensor.GetTemperature();
+  float humidity = Sensor.GetRelHumidity();
 
   Serial.print("Humidity: ");
   Serial.print(humidity);
@@ -107,8 +98,8 @@ BLYNK_WRITE(V3) {
     digitalWrite(pumpPin, pumpState);
     Blynk.setProperty(V3, "color", pumpState == 1 ? "#00FF00" : "#FF0000");
     Sensor.UpdateData();
-    temperature = Sensor.GetTemperature();
-    humidity = Sensor.GetRelHumidity();
+    float temperature = Sensor.GetTemperature();
+    float humidity = Sensor.GetRelHumidity();
     Blynk.virtualWrite(V1, temperature);
     Blynk.virtualWrite(V2, humidity);
     
