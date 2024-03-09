@@ -24,6 +24,9 @@ void setup() {
   Serial.begin(9600);
   Sensor.Begin();
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  
+  // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
+  Blynk.syncVirtual(V6);  
 }
 
 void getTemperatureAndHumidity(float& temperature, float& humidity) {
@@ -68,7 +71,8 @@ void loop() {
   Blynk.setProperty(V4, "color", "#2EA5D8");
   Blynk.setProperty(V5, "color", "#2EA5D8");
   Blynk.setProperty(V6, "color", "#2EA5D8");
-
+  Serial.println("desiredhumidity");
+  Serial.println(desiredHumidity);
   float temperature, humidity;
   getTemperatureAndHumidity(temperature, humidity);
   Serial.println(temperature);
