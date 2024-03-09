@@ -1,7 +1,6 @@
-#include <DHT.h>
-#define DHTPIN D2     // Chân kết nối của cảm biến DHT11 với ESP8266
-#define DHTTYPE DHT11   // Loại cảm biến (DHT11 hoặc DHT22)
-DHT dht(DHTPIN, DHTTYPE);
+#include <SHT3x.h>
+SHT3x Sensor;
+
 
 #include "secret_pass.h"
 
@@ -23,12 +22,13 @@ void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  dht.begin();
+  Sensor.Begin();
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  float currentTemperature = dht.readTemperature();
-  float currentHumidity = dht.readHumidity();
+  Sensor.UpdateData();
+  temperature = Sensor.GetTemperature();
+  humidity = Sensor.GetRelHumidity();
 
   unsigned long currentMillis = millis();
   
@@ -67,13 +67,10 @@ void loop() {
     autoControlMode(desiredTemperature, desiredHumidity);
   }
 
-  float humidity = dht.readHumidity(); // Đọc độ ẩm từ cảm biến DHT11
-  float temperature = dht.readTemperature(); // Đọc nhiệt độ từ cảm biến DHT11
+  Sensor.UpdateData();
+  temperature = Sensor.GetTemperature();
+  humidity = Sensor.GetRelHumidity();
 
-  if (isnan(humidity) || isnan(temperature)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
-  }
 
   Serial.print("Humidity: ");
   Serial.print(humidity);
@@ -96,8 +93,9 @@ BLYNK_WRITE(V3) {
     int pumpState = param.asInt();
     digitalWrite(pumpPin, pumpState);
     Blynk.setProperty(V3, "color", pumpState == 1 ? "#00FF00" : "#FF0000");
-    float temperature = dht.readTemperature();
-    float humidity = dht.readHumidity();
+    Sensor.UpdateData();
+    temperature = Sensor.GetTemperature();
+    humidity = Sensor.GetRelHumidity();
     Blynk.virtualWrite(V1, temperature);
     Blynk.virtualWrite(V2, humidity);
     
