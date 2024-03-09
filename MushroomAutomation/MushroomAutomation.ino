@@ -35,7 +35,7 @@ void autoControlMode(float& temperature, float& humidity) {
 
   unsigned long currentMillis = millis();
   
-  if (currentTemperature > temperature || currentHumidity < humidity) {
+  if (currentHumidity < humidity) {
     if (currentMillis - lastSprayTime >= 10000) {
       digitalWrite(pumpPin, HIGH);
       Blynk.setProperty(V3, "color", "#2EA5D8");
