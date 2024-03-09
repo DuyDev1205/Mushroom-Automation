@@ -10,12 +10,14 @@ SHT3x Sensor;
 
 const int pumpPin = 12;
 bool autoControl = true;
-float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
 unsigned long lastSprayTime = 0;
 unsigned long lastCheckTime = 0;
 float currentTemperature, currentHumidity;
 int pumpState = LOW;
+int pumpCount = 0;
+int lastDayPumpCount = 0;
+int lastDay = 0;
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
@@ -30,7 +32,7 @@ void getTemperatureAndHumidity(float& temperature, float& humidity) {
   humidity = Sensor.GetRelHumidity();
 }
 
-void autoControlMode(float& temperature, float& humidity) {
+void autoControlMode(float& humidity) {
   getTemperatureAndHumidity(currentTemperature, currentHumidity);
 
   unsigned long currentMillis = millis();
@@ -40,7 +42,10 @@ void autoControlMode(float& temperature, float& humidity) {
       digitalWrite(pumpPin, HIGH);
       Blynk.setProperty(V3, "color", "#2EA5D8");
       Blynk.virtualWrite(V3, 1); 
-      lastSprayTime = currentMillis; 
+      lastSprayTime = currentMillis;
+      pumpCount++;
+      Blynk.virtualWrite(V7, pumpCount); // Cập nhật số lần bơm
+      lastDayPumpCount++;
       delay(2000);
       digitalWrite(pumpPin, LOW);
       Blynk.setProperty(V3, "color", "#FF0000" );
@@ -70,8 +75,18 @@ void loop() {
   Blynk.virtualWrite(V2, humidity);
   Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
 
-  if (autoControl && temperature != 0 && humidity != 0) {
-    autoControlMode(desiredTemperature, desiredHumidity);
+  if (autoControl && humidity != 0) {
+    autoControlMode(desiredHumidity);
+  }
+
+  unsigned long currentTime = millis();
+  int currentDay = currentTime / (1000 * 60 * 60 * 24); // Lấy ngày hiện tại
+  if (currentDay != lastDay) { // Nếu đã qua ngày mới
+    lastDay = currentDay;
+    lastDayPumpCount = pumpCount; // Lưu trữ số lần bơm của ngày hôm trước
+    pumpCount = 0; // Reset số lần bơm
+    Blynk.virtualWrite(V8, lastDayPumpCount); // Cập nhật số lần bơm của ngày hôm trước
+    Blynk.virtualWrite(V7, pumpCount); // Cập nhật số lần bơm
   }
 }
 
@@ -85,9 +100,5 @@ BLYNK_WRITE(V3) {
 }
 
 BLYNK_WRITE(V5) {
-  desiredTemperature = param.asFloat();
-}
-
-BLYNK_WRITE(V6) {
   desiredHumidity = param.asFloat();
 }
