@@ -18,12 +18,16 @@ float desiredHumidity = 60.0;
 
 unsigned long lastSprayTime = 0;
 unsigned long lastCheckTime = 0;
+bool firstRun = true; // Biến để đánh dấu lần chạy đầu tiên
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   dht.begin();
+
+  // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
+  Blynk.syncVirtual(V6);
 }
 
 void autoControlMode(float& temperature, float& humidity) {
@@ -32,7 +36,7 @@ void autoControlMode(float& temperature, float& humidity) {
 
   unsigned long currentMillis = millis();
   
-  if ( currentHumidity < humidity) {
+  if (currentHumidity < humidity) {
     if (currentMillis - lastSprayTime >= 10000) {
       digitalWrite(pumpPin, HIGH);
       Blynk.setProperty(V3, "color", "#2EA5D8");
@@ -58,7 +62,9 @@ void loop() {
   Blynk.setProperty(V4, "color", autoControl ? "#2EA5D8" : "#FF0000");
   Blynk.setProperty(V5, "color", autoControl ? "#2EA5D8" : "#FF0000");
   Blynk.setProperty(V6, "color", autoControl ? "#2EA5D8" : "#FF0000");
-
+  BLYNK_WRITE(V6);
+  Serial.println("desiredhumidity");
+  Serial.println(desiredHumidity);
   if (!autoControl) {
     BLYNK_WRITE(V3);
   }
@@ -109,5 +115,6 @@ BLYNK_WRITE(V5) {
 }
 
 BLYNK_WRITE(V6) {
+  // Cập nhật giá trị của desiredHumidity khi nhận được từ chân V6
   desiredHumidity = param.asFloat();
 }
