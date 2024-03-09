@@ -23,8 +23,10 @@ void setup() {
   Serial.begin(9600);
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   Sensor.Begin();
-    // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
-  Blynk.syncVirtual(V6);
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  
+  // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
+  Blynk.syncVirtual(V6);  
 }
 
 void autoControlMode(float& temperature, float& humidity) {
@@ -55,13 +57,21 @@ void autoControlMode(float& temperature, float& humidity) {
 void loop() {
   Blynk.run();
   Blynk.setProperty(V3, "label", "Máy bơm");
-  Blynk.setProperty(V1, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V2, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V4, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V5, "color", autoControl ? "#2EA5D8" : "#FF0000");
-  Blynk.setProperty(V6, "color", autoControl ? "#2EA5D8" : "#FF0000");
+  Blynk.setProperty(V1, "color", "#2EA5D8");
+  Blynk.setProperty(V2, "color", "#2EA5D8");
+  Blynk.setProperty(V4, "color", "#2EA5D8");
+  Blynk.setProperty(V5, "color", "#2EA5D8");
+  Blynk.setProperty(V6, "color", "#2EA5D8");
   Serial.println("desiredhumidity");
   Serial.println(desiredHumidity);
+  float temperature, humidity;
+  getTemperatureAndHumidity(temperature, humidity);
+  Serial.println(temperature);
+  Serial.println(humidity);
+  Blynk.virtualWrite(V1, temperature);
+  Blynk.virtualWrite(V2, humidity);
+  Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
+
   if (!autoControl) {
     BLYNK_WRITE(V3);
   }
