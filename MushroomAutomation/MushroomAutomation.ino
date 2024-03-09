@@ -33,7 +33,9 @@ void getTemperatureAndHumidity(float& temperature, float& humidity) {
 }
 
 void autoControlMode(float& humidity) {
-  getTemperatureAndHumidity(currentTemperature, currentHumidity);
+  Sensor.UpdateData();
+  temperature = Sensor.GetTemperature();
+  humidity = Sensor.GetRelHumidity();
 
   unsigned long currentMillis = millis();
   
@@ -75,12 +77,17 @@ void loop() {
   Blynk.virtualWrite(V2, humidity);
   Blynk.setProperty(V3, "color", pumpState == HIGH ? "#00FF00" : "#FF0000");
 
-  if (autoControl && humidity != 0) {
+  if (!autoControl) {
+    BLYNK_WRITE(V3);
+  }
+  if (autoControl) {
     autoControlMode(desiredHumidity);
   }
 
   unsigned long currentTime = millis();
   int currentDay = currentTime / (1000 * 60 * 60 * 24); // Lấy ngày hiện tại
+  Serial.println("Ngay hien tai: ");
+  Serial.println(currentDay);
   if (currentDay != lastDay) { // Nếu đã qua ngày mới
     lastDay = currentDay;
     lastDayPumpCount = pumpCount; // Lưu trữ số lần bơm của ngày hôm trước
