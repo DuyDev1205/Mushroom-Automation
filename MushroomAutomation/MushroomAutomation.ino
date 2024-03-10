@@ -27,7 +27,8 @@ void setup() {
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   
   // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
-  Blynk.syncVirtual(V6);  
+  Blynk.syncVirtual(V6); 
+  Blynk.syncVirtual(V4); 
 }
 
 void autoControlMode(float& temperature, float& humidity) {
@@ -64,19 +65,24 @@ void loop() {
   Blynk.setProperty(V6, "color", "#2EA5D8");
   Serial.println("desiredhumidity");
   Serial.println(desiredHumidity);
-  
-  if (!autoControl) {
-    BLYNK_WRITE(V3);
-  }
-
-  if (autoControl) {
-    autoControlMode(desiredTemperature, desiredHumidity);
-  }
-
   Sensor.UpdateData();
   float temperature = Sensor.GetTemperature();
   float humidity = Sensor.GetRelHumidity();
 
+  if (!autoControl) {
+    BLYNK_WRITE(V3);
+    Sensor.UpdateData();
+    float temperature = Sensor.GetTemperature();
+    float humidity = Sensor.GetRelHumidity();
+    Blynk.virtualWrite(V1, temperature);
+    Blynk.virtualWrite(V2, humidity);
+  }
+
+  if (autoControl && humidity != 0) {
+    autoControlMode(desiredTemperature, desiredHumidity);
+  }
+
+  
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.print("% - Temperature: ");
@@ -86,7 +92,7 @@ void loop() {
   Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến ứng dụng Blynk
   Blynk.virtualWrite(V2, humidity); // Gửi dữ liệu độ ẩm đến ứng dụng Blynk
 
-  delay(2000); // Đợi 2 giây trước khi đọc lại dữ liệu từ cảm biến
+
 }
 
 BLYNK_WRITE(V4) {
@@ -98,11 +104,7 @@ BLYNK_WRITE(V3) {
     int pumpState = param.asInt();
     digitalWrite(pumpPin, pumpState);
     Blynk.setProperty(V3, "color", pumpState == 1 ? "#00FF00" : "#FF0000");
-    Sensor.UpdateData();
-    float temperature = Sensor.GetTemperature();
-    float humidity = Sensor.GetRelHumidity();
-    Blynk.virtualWrite(V1, temperature);
-    Blynk.virtualWrite(V2, humidity);
+    
     
   }
 }
