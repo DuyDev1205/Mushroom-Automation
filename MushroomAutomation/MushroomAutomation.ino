@@ -1,6 +1,9 @@
-#include <SHT3x.h>
-SHT3x Sensor;
 
+#include <Arduino.h>
+#include <Wire.h>
+#include "Adafruit_SHT31.h"
+
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 #include "secret_pass.h"
 
@@ -9,7 +12,7 @@ SHT3x Sensor;
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 
-const int pumpPin = D1; // Chân kết nối của máy bơm với ESP8266
+const int pumpPin = D6; // Chân kết nối của máy bơm với ESP8266
 
 bool autoControl = true;
 float desiredTemperature = 25.0;
@@ -22,14 +25,27 @@ void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  Sensor.Begin();
+   while (!Serial)
+    delay(10);     // will pause Zero, Leonardo, etc until serial console opens
+
+  Serial.println("SHT31 test");
+  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+    Serial.println("Couldn't find SHT31");
+    while (1) delay(1);
+  }
+
+  Serial.print("Heater Enabled State: ");
+  if (sht31.isHeaterEnabled())
+    Serial.println("ENABLED");
+  else
+    Serial.println("DISABLED");
     // Đọc giá trị từ chân V6 khi chương trình chạy lần đầu
   Blynk.syncVirtual(V6);
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  Sensor.UpdateData();
-  float currentHumidity = Sensor.GetRelHumidity();
+  float t = sht31.readTemperature();
+  float currentHumidity = sht31.readHumidity();
 
   unsigned long currentMillis = millis();
   
@@ -69,9 +85,8 @@ void loop() {
     autoControlMode(desiredTemperature, desiredHumidity);
   }
 
-  Sensor.UpdateData();
-  float temperature = Sensor.GetTemperature();
-  float humidity = Sensor.GetRelHumidity();
+  float temperature = sht31.readTemperature();
+  float humidity = sht31.readHumidity();
 
 
   Serial.print("Humidity: ");
@@ -95,9 +110,8 @@ BLYNK_WRITE(V3) {
     int pumpState = param.asInt();
     digitalWrite(pumpPin, pumpState);
     Blynk.setProperty(V3, "color", pumpState == 1 ? "#00FF00" : "#FF0000");
-    Sensor.UpdateData();
-    float temperature = Sensor.GetTemperature();
-    float humidity = Sensor.GetRelHumidity();
+    float temperature = sht31.readTemperature();
+    float humidity = sht31.readHumidity();
     Blynk.virtualWrite(V1, temperature);
     Blynk.virtualWrite(V2, humidity);
     
