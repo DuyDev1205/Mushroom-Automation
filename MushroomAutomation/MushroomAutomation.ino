@@ -15,6 +15,15 @@ unsigned long lastCheckTime = 0;
 void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
+
+  // Kết nối WiFi
+  WiFi.begin(ssid, pass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Đang kết nối WiFi...");
+  }
+
+  // Khi kết nối thành công, tiếp tục khởi tạo Blynk
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   Sensor.Begin();
   Blynk.syncVirtual(V6);
