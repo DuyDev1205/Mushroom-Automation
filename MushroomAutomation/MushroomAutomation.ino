@@ -87,7 +87,24 @@ void manageAutoControl() {
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  // Thêm code quản lý chế độ tự động ở đây
+  Sensor.UpdateData(); // Cập nhật dữ liệu từ cảm biến SHT
+  float currentHumidity = Sensor.GetRelHumidity(); // Đọc độ ẩm từ cảm biến SHT
+  unsigned long currentMillis = millis();
+
+  if (currentHumidity < humidity && currentMillis - lastSprayTime >= 10000) {
+    digitalWrite(pumpPin, HIGH);
+    Blynk.setProperty(V3, "color", "#2EA5D8");
+    Blynk.virtualWrite(V3, 1);
+    lastSprayTime = currentMillis;
+    delay(2000);
+    digitalWrite(pumpPin, LOW);
+    Blynk.setProperty(V3, "color", "#FF0000");
+    Blynk.virtualWrite(V3, 0);
+  } else {
+    digitalWrite(pumpPin, LOW);
+    Blynk.setProperty(V3, "color", "#FF0000");
+    Blynk.virtualWrite(V3, 0);
+  }
 }
 
 BLYNK_WRITE(V4) {
