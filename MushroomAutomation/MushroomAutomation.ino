@@ -10,24 +10,60 @@ bool autoControl = true;
 float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
 unsigned long lastSprayTime = 0;
-unsigned long lastCheckTime = 0;
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
 
-  // Kết nối WiFi
+  connectToWiFi(); // Kết nối WiFi
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  Sensor.Begin();
+  Blynk.syncVirtual(V6);
+  Blynk.syncVirtual(V4);
+}
+
+void loop() {
+  Blynk.run();
+  updateBlynkUI(); // Cập nhật giao diện người dùng Blynk
+  manageAutoControl(); // Quản lý chế độ tự động
+
+  Sensor.UpdateData();
+  float temperature = Sensor.GetTemperature();
+  float humidity = Sensor.GetRelHumidity();
+
+  Serial.print("Độ ẩm: ");
+  Serial.print(humidity);
+  Serial.print("% - Nhiệt độ: ");
+  Serial.print(temperature);
+  Serial.println("°C");
+
+  Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến Blynk
+  Blynk.virtualWrite(V2, humidity); // Gửi dữ liệu độ ẩm đến Blynk
+}
+
+void connectToWiFi() {
   WiFi.begin(ssid, pass);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Đang kết nối WiFi...");
   }
+  Serial.println("Kết nối WiFi thành công");
+}
 
-  // Khi kết nối thành công, tiếp tục khởi tạo Blynk
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  Sensor.Begin();
-  Blynk.syncVirtual(V6);
-  Blynk.syncVirtual(V4);
+void updateBlynkUI() {
+  Blynk.setProperty(V3, "label", "Máy bơm");
+  Blynk.setProperty(V1, "color", "#2EA5D8");
+  Blynk.setProperty(V2, "color", "#2EA5D8");
+  Blynk.setProperty(V4, "color", "#2EA5D8");
+  Blynk.setProperty(V5, "color", "#2EA5D8");
+  Blynk.setProperty(V6, "color", "#2EA5D8");
+}
+
+void manageAutoControl() {
+  if (autoControl) {
+    autoControlMode(desiredTemperature, desiredHumidity);
+  }
 }
 
 void autoControlMode(float& temperature, float& humidity) {
@@ -49,38 +85,6 @@ void autoControlMode(float& temperature, float& humidity) {
     Blynk.setProperty(V3, "color", "#FF0000");
     Blynk.virtualWrite(V3, 0);
   }
-}
-
-void loop() {
-  Blynk.run();
-  Blynk.setProperty(V3, "label", "Máy bơm");
-  Blynk.setProperty(V1, "color", "#2EA5D8");
-  Blynk.setProperty(V2, "color", "#2EA5D8");
-  Blynk.setProperty(V4, "color", "#2EA5D8");
-  Blynk.setProperty(V5, "color", "#2EA5D8");
-  Blynk.setProperty(V6, "color", "#2EA5D8");
-
-  Sensor.UpdateData();
-  float temperature = Sensor.GetTemperature();
-  float humidity = Sensor.GetRelHumidity();
-
-  if (!autoControl) {
-    Blynk.virtualWrite(V1, temperature);
-    Blynk.virtualWrite(V2, humidity);
-  }
-
-  if (autoControl && humidity != 0) {
-    autoControlMode(desiredTemperature, desiredHumidity);
-  }
-
-  Serial.print("Humidity: ");
-  Serial.print(humidity);
-  Serial.print("% - Temperature: ");
-  Serial.print(temperature);
-  Serial.println("°C");
-
-  Blynk.virtualWrite(V1, temperature);
-  Blynk.virtualWrite(V2, humidity);
 }
 
 BLYNK_WRITE(V4) {
