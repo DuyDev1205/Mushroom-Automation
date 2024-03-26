@@ -1,14 +1,13 @@
 #include "secret_pass.h"
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
 
 const int pumpPin = 12;
 bool autoControl = true;
 float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
 unsigned long lastSprayTime = 0;
-
-bool wifiConnected = false; // Biến để theo dõi trạng thái kết nối WiFi
+bool wifiConnected = false;
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
