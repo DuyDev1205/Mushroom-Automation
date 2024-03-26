@@ -62,15 +62,25 @@ void connectToWiFi() {
 }
 
 void updateBlynkUI() {
-  Blynk.setProperty(V3, "label", "Máy bơm");
-  Blynk.setProperty(V1, "color", "#2EA5D8");
-  Blynk.setProperty(V2, "color", "#2EA5D8");
-  Blynk.setProperty(V4, "color", "#2EA5D8");
-  Blynk.setProperty(V5, "color", "#2EA5D8");
-  Blynk.setProperty(V6, "color", "#2EA5D8");
+  if (autoControl) {
+    // Nếu chế độ tự động được kích hoạt, đặt màu xanh cho tất cả các nút
+    Blynk.setProperty(V1, "color", "#2EA5D8"); // Màu xanh
+    Blynk.setProperty(V2, "color", "#2EA5D8"); // Màu xanh
+    Blynk.setProperty(V4, "color", "#2EA5D8"); // Màu xanh
+    Blynk.setProperty(V5, "color", "#2EA5D8"); // Màu xanh
+    Blynk.setProperty(V6, "color", "#2EA5D8"); // Màu xanh
+  } else {
+    // Nếu chế độ tự động không được kích hoạt, đặt màu đỏ cho tất cả các nút
+    Blynk.setProperty(V1, "color", "#FF0000"); // Màu đỏ
+    Blynk.setProperty(V2, "color", "#FF0000"); // Màu đỏ
+    Blynk.setProperty(V4, "color", "#FF0000"); // Màu đỏ
+    Blynk.setProperty(V5, "color", "#FF0000"); // Màu đỏ
+    Blynk.setProperty(V6, "color", "#FF0000"); // Màu đỏ
+  }
 }
 
 void manageAutoControl() {
+  updateBlynkUI();
   if (autoControl) {
     autoControlMode(desiredTemperature, desiredHumidity);
   }
