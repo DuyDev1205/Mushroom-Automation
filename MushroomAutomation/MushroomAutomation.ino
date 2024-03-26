@@ -1,10 +1,10 @@
-#include <SHT3x.h>
 #include "secret_pass.h"
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
 
-SHT3x Sensor;
+// #include <SHT3x.h> // Loại bỏ thư viện cảm biến SHT
+// SHT3x Sensor; // Khai báo cảm biến SHT
+
 const int pumpPin = 12;
 bool autoControl = true;
 float desiredTemperature = 25.0;
@@ -18,28 +18,32 @@ void setup() {
   connectToWiFi(); // Kết nối WiFi
 
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  Sensor.Begin();
+  updateBlynkUI();
+  // Sensor.Begin(); // Khởi động cảm biến SHT
   Blynk.syncVirtual(V6);
   Blynk.syncVirtual(V4);
 }
 
 void loop() {
-  Blynk.run();
-  updateBlynkUI(); // Cập nhật giao diện người dùng Blynk
+  Blynk.run(); // Cập nhật giao diện người dùng Blynk
   manageAutoControl(); // Quản lý chế độ tự động
+  while (WiFi.status() != WL_CONNECTED) {
+    connectToWiFi(); 
+    delay(1000); 
+  }
 
-  Sensor.UpdateData();
-  float temperature = Sensor.GetTemperature();
-  float humidity = Sensor.GetRelHumidity();
+  // Sensor.UpdateData(); // Cập nhật dữ liệu từ cảm biến SHT
+  // float temperature = Sensor.GetTemperature(); // Đọc nhiệt độ từ cảm biến SHT
+  // float humidity = Sensor.GetRelHumidity(); // Đọc độ ẩm từ cảm biến SHT
 
-  Serial.print("Độ ẩm: ");
-  Serial.print(humidity);
-  Serial.print("% - Nhiệt độ: ");
-  Serial.print(temperature);
-  Serial.println("°C");
+  // Serial.print("Độ ẩm: ");
+  // Serial.print(humidity);
+  // Serial.print("% - Nhiệt độ: ");
+  // Serial.print(temperature);
+  // Serial.println("°C");
 
-  Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến Blynk
-  Blynk.virtualWrite(V2, humidity); // Gửi dữ liệu độ ẩm đến Blynk
+  // Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến Blynk
+  // Blynk.virtualWrite(V2, humidity); // Gửi dữ liệu độ ẩm đến Blynk
 }
 
 void connectToWiFi() {
@@ -67,24 +71,24 @@ void manageAutoControl() {
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  Sensor.UpdateData();
-  float currentHumidity = Sensor.GetRelHumidity();
+  // Sensor.UpdateData(); // Cập nhật dữ liệu từ cảm biến SHT
+  // float currentHumidity = Sensor.GetRelHumidity(); // Đọc độ ẩm từ cảm biến SHT
   unsigned long currentMillis = millis();
 
-  if (currentHumidity < humidity && currentMillis - lastSprayTime >= 10000) {
-    digitalWrite(pumpPin, HIGH);
-    Blynk.setProperty(V3, "color", "#2EA5D8");
-    Blynk.virtualWrite(V3, 1);
-    lastSprayTime = currentMillis;
-    delay(2000);
-    digitalWrite(pumpPin, LOW);
-    Blynk.setProperty(V3, "color", "#FF0000");
-    Blynk.virtualWrite(V3, 0);
-  } else {
-    digitalWrite(pumpPin, LOW);
-    Blynk.setProperty(V3, "color", "#FF0000");
-    Blynk.virtualWrite(V3, 0);
-  }
+  // if (currentHumidity < humidity && currentMillis - lastSprayTime >= 10000) {
+  //   digitalWrite(pumpPin, HIGH);
+  //   Blynk.setProperty(V3, "color", "#2EA5D8");
+  //   Blynk.virtualWrite(V3, 1);
+  //   lastSprayTime = currentMillis;
+  //   delay(2000);
+  //   digitalWrite(pumpPin, LOW);
+  //   Blynk.setProperty(V3, "color", "#FF0000");
+  //   Blynk.virtualWrite(V3, 0);
+  // } else {
+  //   digitalWrite(pumpPin, LOW);
+  //   Blynk.setProperty(V3, "color", "#FF0000");
+  //   Blynk.virtualWrite(V3, 0);
+  // }
 }
 
 BLYNK_WRITE(V4) {
