@@ -1,6 +1,13 @@
 #include "secret_pass.h"
-#include <WiFi.h>
-#include <BlynkSimpleEsp32.h>
+
+#include <Wire.h>
+#include "Adafruit_SHT31.h"
+bool enableHeater = false;
+uint8_t loopCnt = 0;
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
 
 const int pumpPin = 12;
 bool autoControl = true;
@@ -12,9 +19,21 @@ bool wifiConnected = false;
 void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
+  Serial.println("SHT31 test");
+  
+  Serial.println("SHT31 test");
+  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+    Serial.println("Couldn't find SHT31");
+    while (1) delay(1);
+  }
 
+  Serial.print("Heater Enabled State: ");
+  if (sht31.isHeaterEnabled())
+    Serial.println("ENABLED");
+  else
+    Serial.println("DISABLED");
   connectToWiFi(); // Kết nối WiFi
-
+  
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   updateBlynkUI();
   Blynk.syncVirtual(V6);
@@ -29,6 +48,10 @@ void loop() {
   }
 
   Blynk.run();
+  float temperature = sht31.readTemperature();
+  float humidity = sht31.readHumidity();
+  Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến ứng dụng Blynk
+  Blynk.virtualWrite(V2, humidity);
   manageAutoControl();
 }
 
@@ -86,8 +109,8 @@ void manageAutoControl() {
 }
 
 void autoControlMode(float& temperature, float& humidity) {
-  Sensor.UpdateData(); // Cập nhật dữ liệu từ cảm biến SHT
-  float currentHumidity = Sensor.GetRelHumidity(); // Đọc độ ẩm từ cảm biến SHT
+  
+  float currentHumidity = sht31.readHumidity(); // Đọc độ ẩm từ cảm biến SHT
   unsigned long currentMillis = millis();
 
   if (currentHumidity < humidity && currentMillis - lastSprayTime >= 10000) {
