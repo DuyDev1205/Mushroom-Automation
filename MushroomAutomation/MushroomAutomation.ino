@@ -15,23 +15,14 @@ float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
 unsigned long lastSprayTime = 0;
 bool wifiConnected = false;
+bool sensorConnected = false;
+
 
 void setup() {
   pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
   Serial.println("SHT31 test");
-  
-  Serial.println("SHT31 test");
-  if (! sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
-    Serial.println("Couldn't find SHT31");
-    while (1) delay(1);
-  }
 
-  Serial.print("Heater Enabled State: ");
-  if (sht31.isHeaterEnabled())
-    Serial.println("ENABLED");
-  else
-    Serial.println("DISABLED");
   connectToWiFi(); // Kết nối WiFi
   
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
@@ -39,6 +30,37 @@ void setup() {
   Blynk.syncVirtual(V6);
   Blynk.virtualWrite(V4, 1);
   autoControl = true;
+
+  // Thử kết nối cảm biến
+  while (!sensorConnected) {
+    Serial.println("Initializing SHT31...");
+    if (sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+      Serial.println("SHT31 connected successfully.");
+      sensorConnected = true; // Đặt cờ kết nối cảm biến thành công
+    } else {
+      Serial.println("Couldn't find SHT31. Retrying...");
+      delay(1000);
+    }
+  }
+
+  Serial.print("Heater Enabled State: ");
+  if (sht31.isHeaterEnabled())
+    Serial.println("ENABLED");
+  else
+    Serial.println("DISABLED");
+}
+
+void reconnectSensor() {
+  Serial.println("Attempting to reconnect sensor...");
+  
+  // Thử khởi tạo lại cảm biến
+  if (!sht31.begin(0x44)) {   // Set to 0x45 for alternate i2c addr
+    Serial.println("Couldn't find SHT31. Retrying...");
+    delay(1000);
+    return; // Thử lại sau một khoảng thời gian
+  }
+
+  Serial.println("Sensor reconnected successfully.");
 }
 
 void loop() {
@@ -48,12 +70,19 @@ void loop() {
   }
 
   Blynk.run();
-  float temperature = sht31.readTemperature();
-  float humidity = sht31.readHumidity();
-  Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến ứng dụng Blynk
-  Blynk.virtualWrite(V2, humidity);
-  Serial.println("hehe");
-  manageAutoControl();
+
+  // Kiểm tra kết nối cảm biến, nếu mất kết nối, reconnect
+  if (!sht31.begin(0x44)) {
+    reconnectSensor();
+  } else {
+    // Nếu cảm biến kết nối thành công, tiếp tục thực hiện các thao tác khác
+    float temperature = sht31.readTemperature();
+    float humidity = sht31.readHumidity();
+    Blynk.virtualWrite(V1, temperature);
+    Blynk.virtualWrite(V2, humidity);
+    Serial.println("hehe");
+    manageAutoControl();
+  }
 }
 
 void connectToWiFi() {
