@@ -9,7 +9,7 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 
-const int pumpPin = 12;
+const int pumpPin = D6;
 bool autoControl = true;
 float desiredTemperature = 25.0;
 float desiredHumidity = 60.0;
@@ -52,6 +52,7 @@ void loop() {
   float humidity = sht31.readHumidity();
   Blynk.virtualWrite(V1, temperature); // Gửi dữ liệu nhiệt độ đến ứng dụng Blynk
   Blynk.virtualWrite(V2, humidity);
+  Serial.println("hehe");
   manageAutoControl();
 }
 
