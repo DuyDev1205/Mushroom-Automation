@@ -1,9 +1,10 @@
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include "secret_pass.h"
-const char *ssid = SECRET_SSID;//Thay thể tên wifi trong tệp secret_pass.h
-const char *password = SECRET_PASS;//Thay thế mật khẩu trong tệp secret_pass.h
+
+const char *ssid = SECRET_SSID;    // Thay thể tên wifi trong tệp secret_pass.h
+const char *password = SECRET_PASS; // Thay thế mật khẩu trong tệp secret_pass.h
 
 // Địa chỉ IP của máy chủ NTP
 const char *ntpServer = "pool.ntp.org";
@@ -13,6 +14,9 @@ const int ntpPort = 123;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, ntpServer, ntpPort);
+
+// Múi giờ của bạn (ví dụ: GMT+7)
+const long timeZoneOffset = 7 * 3600; // Đổi thành số giây
 
 void setup() {
   Serial.begin(115200);
@@ -27,6 +31,9 @@ void setup() {
 
   // Bắt đầu đồng bộ thời gian từ máy chủ NTP
   timeClient.begin();
+
+  // Đặt múi giờ
+  timeClient.setTimeOffset(timeZoneOffset);
 }
 
 void loop() {
