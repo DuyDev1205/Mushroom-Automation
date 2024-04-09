@@ -1,5 +1,5 @@
 #include "secret_pass.h"
-
+#include <WiFiManager.h> // Thêm khai báo thư viện WiFiManager
 #include <Wire.h>
 #include "Adafruit_SHT31.h"
 bool enableHeater = false;
@@ -25,7 +25,7 @@ void setup() {
 
   connectToWiFi(); // Kết nối WiFi
   
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  Blynk.begin(BLYNK_AUTH_TOKEN, WiFi.SSID().c_str(), WiFi.psk().c_str());
   updateBlynkUI();
   Blynk.syncVirtual(V6);
   Blynk.virtualWrite(V4, 1);
@@ -85,33 +85,29 @@ void loop() {
   }
 }
 
-void connectToWiFi() {
-  WiFi.begin(ssid, pass);
-  unsigned long startTime = millis(); // Thời gian bắt đầu kết nối WiFi
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Đang kết nối WiFi...");
-    // Nếu quá thời gian kết nối (ví dụ: 30 giây), thoát vòng lặp
-    if (millis() - startTime > 30000) {
-      break;
+ void connectToWiFi() {
+  // Khởi tạo WiFiManager
+  WiFiManager wifiManager;
+
+  // Kiểm tra xem ESP8266 có kết nối WiFi hay không
+  if (!WiFi.isConnected()) {
+    // Thử kết nối WiFi hoặc chuyển sang chế độ điểm truy cập (AP) để cấu hình WiFi mới
+    if (!wifiManager.autoConnect("ESP8266_AP")) {
+      Serial.println("Failed to connect and hit timeout");
+      // Nếu kết nối thất bại sau một khoảng thời gian, reset thiết bị
+      ESP.reset();
+      delay(1000);
+    } else {
+      // In ra thông báo khi kết nối WiFi thành công
+      Serial.println("Connected to WiFi");
+      Serial.print("SSID: ");
+      Serial.println(WiFi.SSID()); // In ra tên của mạng WiFi đã kết nối
+
+      autoControl = true;
+      wifiConnected = true; // Cập nhật trạng thái kết nối WiFi
     }
   }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    wifiConnected = true; // Cập nhật trạng thái kết nối WiFi
-    Serial.println("Kết nối WiFi thành công");
-    // Bật chế độ tự động khi kết nối lại WiFi
-    Blynk.virtualWrite(V4, 1);
-    autoControl = true;
-  } else {
-    wifiConnected = false; // Cập nhật trạng thái kết nối WiFi
-    Serial.println("Kết nối WiFi không thành công");
-    // Tắt tất cả các thiết bị khi mất kết nối WiFi
-    digitalWrite(pumpPin, LOW);
-    Blynk.virtualWrite(V4, 0);
-    autoControl = false;
   }
-}
 
 void updateBlynkUI() {
   if (autoControl) {
