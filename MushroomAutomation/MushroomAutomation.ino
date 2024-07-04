@@ -40,14 +40,6 @@ void setup() {
 
 void reconnectSensor() {
   Serial.println("Attempting to reconnect sensor...");
-  if (sht31.begin(0x44)) {
-    Serial.println("Sensor reconnected successfully.");
-    sensorConnected = true;
-  } else {
-    Serial.println("Reconnection failed. Retrying...");
-    sensorConnected = false;
-    delay(1000);
-  }
 }
 
 void loop() {
@@ -61,6 +53,9 @@ void loop() {
     Serial.println("Couldn't find SHT31. Check wiring!");
     sensorConnected = false;
   }
+  
+  Blynk.run();
+
   
   Blynk.run();
 
